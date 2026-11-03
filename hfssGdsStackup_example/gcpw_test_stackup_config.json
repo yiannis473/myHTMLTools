@@ -1,0 +1,45 @@
+{
+  "tool": "hfss-gds-stackup",
+  "version": 3,
+  "saved": "2026-11-03T00:00:00.000Z",
+  "settings": {
+    "gdsFile": "gcpw_test.gds",
+    "units": "um",
+    "scriptName": "import_gcpw_test.py"
+  },
+  "variables": [],
+  "layers": [
+    {
+      "name": "GND",
+      "gds_layer": "1",
+      "z_bottom": "0",
+      "thickness": "35",
+      "material": "copper",
+      "type": "layer"
+    },
+    {
+      "name": "SUB",
+      "gds_layer": "4",
+      "z_bottom": "GND_lowerElevation + GND_thickness",
+      "thickness": "200",
+      "material": "FR4_epoxy",
+      "type": "layer"
+    },
+    {
+      "name": "VIA",
+      "gds_layer": "3",
+      "z_bottom": "SUB_lowerElevation",
+      "thickness": "SUB_thickness",
+      "material": "copper",
+      "type": "via"
+    },
+    {
+      "name": "TOP",
+      "gds_layer": "2",
+      "z_bottom": "SUB_lowerElevation + SUB_thickness",
+      "thickness": "35",
+      "material": "copper",
+      "type": "layer"
+    }
+  ]
+}

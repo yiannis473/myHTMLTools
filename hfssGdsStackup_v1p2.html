@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<!--
+HFSS GDS Stackup Generator v1.2 - single-file, browser-based tool that defines a
+GDS layer stackup and exports a PyAEDT import script (with the stackup embedded)
+for ANSYS HFSS. No network access or external dependencies.
+
+MIT License
+
+Copyright (c) 2026 HFSS GDS Stackup Generator authors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+Attribution (also shown under "License" inside the app): the tool code is
+original to this project. The generated script uses PyAEDT (ansys-aedt-core,
+MIT License, Copyright (c) ANSYS, Inc. and/or its affiliates) at run time; it
+is not included. ANSYS, AEDT, HFSS and Electronics Desktop are trademarks of
+ANSYS, Inc. or its subsidiaries; this tool is not affiliated with or endorsed
+by Ansys.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HFSS GDS Stackup Generator</title>
+<style>
+:root{
+ --bg:#0d1117;--panel:#151b23;--line:#242d38;--text:#dbe3ea;--dim:#8b98a5;--acc:#4cc2ff;
+ --btn:#1d2733;--btnbd:#2c3947;--inp:#0f151c;--inpbd:#2c3947;--rowbg:#10161d;
+ --danger:#ff6b6b;--err:#ff8787;--warn:#f0b429;--ok:#3fb950;
+ --dropbg:rgba(13,17,23,.85);--modalbg:rgba(0,0,0,.6);--code:#0b1015;
+}
+body.light{
+ --bg:#f2f5f8;--panel:#ffffff;--line:#d6dde6;--text:#1e2833;--dim:#5c6773;--acc:#0b76c4;
+ --btn:#e9eef4;--btnbd:#c3ccd6;--inp:#fbfcfe;--inpbd:#c3ccd6;--rowbg:#f3f6fa;
+ --danger:#c0392b;--err:#b02020;--warn:#a86b00;--ok:#1f8a37;
+ --dropbg:rgba(242,245,248,.88);--modalbg:rgba(30,40,51,.45);--code:#f6f8fa;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 system-ui,sans-serif;min-height:100vh}
+header{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:9px 12px;background:var(--panel);border-bottom:1px solid var(--line)}
+header b{margin-right:auto;font-size:15px}
+header b em{color:var(--acc);font-style:normal}
+header .sep{width:1px;height:22px;background:var(--line);margin:0 2px}
+button{background:var(--btn);color:var(--text);border:1px solid var(--btnbd);border-radius:6px;padding:6px 11px;font:inherit;cursor:pointer;white-space:nowrap}
+button:hover{border-color:var(--acc)}
+button:disabled{opacity:.4;cursor:default}
+button.pri{border-color:var(--acc)}
+button.sm{padding:2px 7px;font-size:13px}
+button.del:hover{border-color:var(--danger);color:var(--danger)}
+input,select{background:var(--inp);color:var(--text);border:1px solid var(--inpbd);border-radius:5px;padding:5px 7px;font:inherit;min-width:0}
+input:focus,select:focus{outline:none;border-color:var(--acc)}
+input.bad{border-color:var(--err);background:color-mix(in srgb,var(--err) 12%,var(--inp))}
+input.warn{border-color:var(--warn)}
+input.expr{color:var(--acc);font-family:ui-monospace,Consolas,monospace;font-size:13px}
+td.pv{color:var(--dim);white-space:nowrap;font-variant-numeric:tabular-nums}
+main{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:12px;padding:12px;align-items:start}
+@media(max-width:1100px){main{grid-template-columns:1fr}}
+section{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:12px}
+section h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--dim);margin:0 0 8px;display:flex;align-items:center;gap:8px}
+section h2 span.r{margin-left:auto;display:flex;gap:6px;text-transform:none;letter-spacing:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px 12px}
+.grid label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--dim)}
+table{width:100%;border-collapse:collapse}
+th{font-size:12px;color:var(--dim);font-weight:600;text-align:left;padding:4px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:3px 4px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr:nth-child(even){background:var(--rowbg)}
+tbody tr.hl{outline:1px solid var(--acc)}
+td input,td select{width:100%}
+td.idx{color:var(--dim);width:26px;text-align:right}
+td.zt{color:var(--dim);white-space:nowrap;font-variant-numeric:tabular-nums}
+td.act{white-space:nowrap;width:1%}
+.tblwrap{overflow-x:auto}
+.empty{color:var(--dim);padding:14px;text-align:center}
+code{font-family:ui-monospace,Consolas,monospace}
+#msgs{margin:8px 0 0;padding:0;list-style:none;font-size:13px}
+#msgs li{padding:2px 0}
+#msgs li.error{color:var(--err)}
+#msgs li.warning{color:var(--warn)}
+#msgs li.info{color:var(--dim)}
+#msgs li.ok{color:var(--ok)}
+#msgs li a{color:inherit;cursor:pointer;text-decoration:underline dotted}
+pre#code{margin:0;background:var(--code);border:1px solid var(--line);border-radius:6px;padding:10px;overflow:auto;max-height:560px;font:12px/1.45 ui-monospace,Consolas,monospace;white-space:pre}
+#svgwrap{width:100%}
+#svg{width:100%;height:auto;display:block}
+.hint{color:var(--dim);font-size:12px;margin-top:6px}
+#drop{position:fixed;inset:0;background:var(--dropbg);display:none;align-items:center;justify-content:center;font-size:20px;z-index:20;border:3px dashed var(--acc)}
+#drop.on{display:flex}
+.modal{position:fixed;inset:0;background:var(--modalbg);display:none;align-items:center;justify-content:center;z-index:30}
+.modal.on{display:flex}
+.mbox{background:var(--panel);border:1px solid var(--line);border-radius:10px;max-width:760px;width:calc(100% - 30px);max-height:85vh;overflow:auto;padding:16px 20px}
+.mbox h3{margin-top:0}
+.mbox h4{margin:14px 0 4px}
+.mbox code{background:var(--code);padding:1px 4px;border-radius:4px}
+.ltext{font-size:13px}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--acc);border-radius:8px;padding:8px 14px;display:none;z-index:40}
+#toast.on{display:block}
+input[type=file]{display:none}
+</style>
+</head>
+<body>
+<header>
+ <b>HFSS <em>GDS Stackup</em> Generator</b>
+ <button id="bUndo" title="Undo (Ctrl+Z)" disabled>&#8630; Undo</button>
+ <button id="bRedo" title="Redo (Ctrl+Y or Ctrl+Shift+Z)" disabled>&#8631; Redo</button>
+ <span class="sep"></span>
+ <button id="bLoadCfg" title="Load a previously saved configuration (.json) with all settings and layers">Load config</button>
+ <button id="bSaveCfg" class="pri" title="Save all settings and layers to a .json configuration file">Save config</button>
+ <span class="sep"></span>
+ <button id="bSavePy" class="pri" title="Export the PyAEDT import script">Export script</button>
+ <span class="sep"></span>
+ <button id="bTheme" title="Toggle light/dark theme">Theme</button>
+ <button id="bHelp">Help</button>
+ <button id="bLic" title="License and attribution">License</button>
+ <input type="file" id="fCfg" accept=".json,application/json">
+</header>
+
+<main>
+ <div>
+  <section>
+   <h2>Settings</h2>
+   <div class="grid">
+    <label>GDS file (absolute, or relative to the script folder)<input data-s="gdsFile" type="text" spellcheck="false"></label>
+    <label>Script file name<input data-s="scriptName" type="text" spellcheck="false"></label>
+   </div>
+  </section>
+
+  <section>
+   <h2>Helper variables (optional) <span class="r">
+    <button id="bAddVar" class="sm" title="Add a variable to use in z bottom / thickness expressions">+ Add variable</button>
+   </span></h2>
+   <div class="tblwrap">
+    <table id="vtbl">
+     <thead><tr><th>Name</th><th>Value / expression</th><th>Preview</th><th></th></tr></thead>
+     <tbody></tbody>
+    </table>
+   </div>
+   <div class="hint">Extra HFSS variables for the layer expressions. The script creates each one only if it does not
+    exist yet in the design or project; an existing variable is used as it is. Use a <code>$</code> prefix for project variables.</div>
+  </section>
+
+  <section>
+   <h2>Layers <span class="r">
+    <label style="font-size:12px;color:var(--dim);display:flex;gap:5px;align-items:center" title="Units for plain numbers in the Layers and Helper variables tables">Units for table values
+     <select data-s="units"><option>nm</option><option>um</option><option>mm</option><option>cm</option><option>meter</option><option>mil</option><option>in</option></select></label>
+    <button id="bSort" class="sm" title="Sort rows by z bottom (ascending), then thickness">Sort by z</button>
+    <button id="bAdd" class="sm pri" title="Add a layer on top of the last row">+ Add layer</button>
+   </span></h2>
+   <div class="tblwrap">
+    <table id="tbl">
+     <thead><tr><th>#</th><th>Name</th><th title="Only used for the cross-section drawing (not in the script)">Type</th><th>GDS layer</th><th>z bottom</th><th>Thickness</th><th>z top</th><th>Material</th><th></th></tr></thead>
+     <tbody></tbody>
+    </table>
+   </div>
+   <div class="hint">Each layer <code>NAME</code> is driven by the HFSS variables <code>NAME_lowerElevation</code> and
+    <code>NAME_thickness</code>; z bottom and thickness are their default values (numbers or expressions such as
+    <code>GND_lowerElevation + GND_thickness</code>). Thickness 0 = sheet with Perfect E. Type is used only by this tool (drawing, overlap check).</div>
+   <ul id="msgs"></ul>
+   <datalist id="mats">
+    <option>copper</option><option>aluminum</option><option>gold</option><option>silver</option><option>tungsten</option>
+    <option>nickel</option><option>titanium</option><option>pec</option><option>silicon</option><option>silicon_dioxide</option>
+    <option>Al2_O3_ceramic</option><option>FR4_epoxy</option><option>Rogers RO4003C (tm)</option><option>glass</option><option>air</option><option>vacuum</option>
+   </datalist>
+  </section>
+ </div>
+
+ <div>
+  <section>
+   <h2>Cross-section <span class="r"><label style="font-size:12px;color:var(--dim);display:flex;gap:5px;align-items:center"><input type="checkbox" id="cEq">Equal spacing (not to scale)</label></span></h2>
+   <div id="svgwrap"><svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg></div>
+   <div class="hint">Rows of type "via" are drawn as posts. Overlapping layers are drawn side by side. Hover a layer for details; click it to jump to its row.</div>
+  </section>
+  <section>
+   <h2>Script preview <span class="r"><button id="bCopy" class="sm">Copy</button></span></h2>
+   <pre id="code"></pre>
+  </section>
+ </div>
+</main>
+
+<div id="drop">Drop a .json config</div>
+<div id="toast"></div>
+
+<div class="modal" id="mHelp"><div class="mbox">
+ <h3>HFSS GDS Stackup Generator</h3>
+ <p>Define how each GDS layer becomes a 3D body in HFSS, then export a PyAEDT script that imports the GDS file into
+ the HFSS design that is currently open in AEDT.</p>
+ <h4>Workflow</h4>
+ <ol>
+  <li>Set the GDS file and fill in the layer table. <b>Save config</b> / <b>Load config</b> store everything in a
+   <code>.json</code> file; the last state is also remembered in this browser.</li>
+  <li><b>Export script</b> and put it next to the GDS file (or enter an absolute GDS path).</li>
+  <li>In AEDT, open the project and the HFSS design to import into, then run the script with
+   <b>Automation &gt; Run PyAEDT Script</b> (CPython). <i>Tools &gt; Run Script</i> (IronPython) is not supported;
+   the script prints a message and stops there.</li>
+ </ol>
+ <h4>What the script does</h4>
+ <ul>
+  <li>Works in the <b>active</b> project and design. It does not change the solution type, model units, setups,
+   existing objects, boundaries or variables, and it does <b>not save</b> anything.</li>
+  <li><b>Variables:</b> every layer <code>NAME</code> uses <code>NAME_lowerElevation</code> and <code>NAME_thickness</code>
+   (no thickness variable for zero-thickness layers). A variable that already exists in the design or project is
+   reused unchanged, so its HFSS value wins over the table. A missing one is created as a design variable with the
+   value from the table (plain numbers get the <b>Units for table values</b>). Helper variables are handled the same way. The script
+      prints which variables were reused and which were created, and stops before importing if a variable it has to create
+      uses a variable that exists neither in HFSS nor in the tables.</li>
+  <li><b>Import:</b> one <code>import_gds_3d()</code> call per row, as flat sheets (import method 1). The new objects are
+   swept by <code>NAME_thickness</code> and moved by <code>NAME_lowerElevation</code>, so changing a variable in HFSS
+   moves or resizes the layer.</li>
+  <li><b>Zero thickness:</b> the layer stays a sheet and gets a Perfect E boundary <code>PerfE_GROUP</code> instead of a material.</li>
+  <li><b>Materials</b> must exist in the AEDT library; the script stops before importing if one is missing (no materials are created).</li>
+  <li><b>Names:</b> each layer's objects go into one group named <code>NAME</code>, or <code>NAME_2</code>, <code>NAME_3</code>, ...
+   if that name is already used. Objects are named <code>GROUP_obj1</code>, <code>GROUP_obj2</code>, ... (this pattern never
+   blocks a future group name). All names are checked against existing objects, groups and boundaries, because AEDT uses
+   one namespace for them. The script prints each group with its member count and a table with the z range of each object.</li>
+ </ul>
+ <h4>Table and config</h4>
+ <ul>
+  <li><b>Settings:</b> GDS file (absolute, or relative to the folder of the script) and the file name of the exported script.
+   The GDS file's own units are used for the layout.</li>
+  <li><b>Units for table values</b> (in the Layers header): units given to plain numbers in the Layers and Helper
+   variables tables. Expressions keep the units you type.</li>
+  <li><b>Layers:</b> name, Type, GDS layer number, z bottom, thickness and material. <b>z top</b> is computed for the preview.
+   Row buttons: move up / down, &#8892; stack on the previous row (z bottom = <code>PREV_lowerElevation + PREV_thickness</code>),
+   duplicate, delete. <b>+ Add layer</b> adds a row on top of the last one; <b>Sort by z</b> orders rows by z bottom, then thickness.</li>
+  <li>Layer names must be valid HFSS variable names (letters, digits and <code>_</code>, not starting with a digit) and unique.</li>
+  <li><b>Type</b> (layer / via) affects only this tool: vias are drawn as posts and are left out of the overlap check (a via
+   inside a dielectric is normal; HFSS material precedence handles it). Type is saved in the config, not in the script.</li>
+  <li><b>Helper variables</b> (optional) are extra HFSS variables for the layer expressions; use a <code>$</code> prefix for project
+   variables. A helper with the same name as a per-layer variable (e.g. <code>SUB_thickness</code>) takes precedence (shown as a warning).</li>
+  <li>No separate stackup file is needed: the layer table and helper variables are written into the exported script
+   (<code>STACKUP</code> and <code>VARIABLES</code> at its top). Use <b>Save config</b> / <b>Load config</b> (<code>.json</code>) to store and
+   reload a stackup; configs from older versions load too (removed settings are ignored). You can also drag &amp; drop a
+   <code>.json</code> config anywhere on the page.</li>
+  <li><b>Undo / Redo</b> (<kbd>Ctrl+Z</kbd>, <kbd>Ctrl+Y</kbd> or <kbd>Ctrl+Shift+Z</kbd>) step through the last 100 changes to layers,
+   helper variables, settings and units, including loading a config. A field edit counts as one change when you leave the
+   field or press Enter. While the cursor is in a text field the shortcuts undo the typing in that field, as usual. The
+   history is kept only while the page is open.</li>
+  <li>Expressions: <code>+ - * / ^ ** ( )</code>, <code>pi</code>, <code>abs sqrt min max sin cos tan exp ln</code>, numbers with units
+   (<code>nm um mm cm meter mil in</code> ...). Give numbers inside expressions explicit units (<code>0.5um</code>). Unknown variables
+   are shown as warnings (they must already exist in HFSS), and the layer is left out of the drawing and the overlap check.</li>
+  <li>Validation: red = error (export asks for confirmation), yellow = warning; click a message to jump to the field. Rows
+   that are still incomplete or invalid are left out of the script and listed in a comment in it. A GDS layer that
+   contains no shapes is reported by the script (<code>&lt;-- CHECK</code>) and skipped.</li>
+  <li><b>Cross-section:</b> hover a layer for details, click it to jump to its row; <b>Equal spacing</b> draws all levels evenly (not to scale).
+   <b>Copy</b> copies the script preview; <b>Theme</b> toggles light / dark; <b>License</b> shows the license and attribution.</li>
+ </ul>
+ <p style="color:var(--dim);font-size:12px">Tested with AEDT 2025.2 and PyAEDT (ansys-aedt-core) 0.18. Runs fully offline; no data leaves your browser.</p>
+ <button id="bHelpClose">Close</button>
+</div></div>
+
+<div class="modal" id="mLic"><div class="mbox">
+ <h3>License &amp; Attribution</h3>
+ <div class="ltext">
+  <p><b>HFSS GDS Stackup Generator</b> is a single-file, browser-based tool that generates a PyAEDT import script
+  for a GDS layer stackup in ANSYS HFSS.</p>
+  <h4>License (MIT)</h4>
+  <p>Copyright (c) 2026 HFSS GDS Stackup Generator authors</p>
+  <p>Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the &ldquo;Software&rdquo;), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:</p>
+  <p>The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.</p>
+  <p>THE SOFTWARE IS PROVIDED &ldquo;AS IS&rdquo;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+  <h4>Provenance</h4>
+  <p>Written with the assistance of an AI coding assistant and maintained by the authors.</p>
+  <h4>Attribution</h4>
+  <p>Any code or algorithm adapted from another source is credited here with its authors and license. Current status:</p>
+  <ul>
+   <li><b>Tool code</b> (HTML, CSS, JavaScript: table editor, expression evaluator, validation, cross-section drawing, script
+   generator): original to this project. No third-party source code, libraries, frameworks or fonts are included.</li>
+   <li><b>Generated Python script</b>: original to this project. At run time it uses <b>PyAEDT</b> (<code>ansys-aedt-core</code>,
+   imported as <code>ansys.aedt.core</code>), licensed under the MIT License, Copyright (c) ANSYS, Inc. and/or its affiliates.
+   PyAEDT is <b>not</b> bundled with this tool. Install it separately (recent AEDT versions ship with it) and comply with its
+   license. Running the script also requires a licensed installation of ANSYS Electronics Desktop.</li>
+  </ul>
+  <p>If you add code adapted from elsewhere, list it here with its source, authors and license.</p>
+  <h4>Trademarks</h4>
+  <p>ANSYS, AEDT, HFSS and Electronics Desktop are trademarks or registered trademarks of ANSYS, Inc. or its subsidiaries
+  in the United States or other countries. They are used here only to describe compatibility. This tool is an independent
+  project and is not affiliated with, sponsored by or endorsed by ANSYS, Inc.</p>
+ </div>
+ <button id="bLicClose">Close</button>
+</div></div>
+
+<script>
+'use strict';
+const TOOL_ID='hfss-gds-stackup', TOOL_VERSION='1.2', CFG_VERSION=3;
+const LS_KEY='hfssGdsStackup.v2', LS_OLD='hfssGdsStackup.v1', LS_THEME='hfssGdsStackup.theme';
+const DEFAULT_SETTINGS={gdsFile:'design.gds',units:'um',scriptName:'import_gds.py'};
+const SAMPLE_LAYERS=[
+ {name:'GND',type:'layer',gds_layer:'1',z_bottom:'0',thickness:'35',material:'copper'},
+ {name:'SUB',type:'layer',gds_layer:'4',z_bottom:'GND_lowerElevation + GND_thickness',thickness:'200',material:'FR4_epoxy'},
+ {name:'VIA',type:'via',gds_layer:'3',z_bottom:'SUB_lowerElevation',thickness:'SUB_thickness',material:'copper'},
+ {name:'TOP',type:'layer',gds_layer:'2',z_bottom:'SUB_lowerElevation + SUB_thickness',thickness:'35',material:'copper'}
+];
+const FIELDS=['name','gds_layer','z_bottom','thickness','material'];   // layer fields written to the script (Type is drawing-only)
+const TYPES=['layer','via'];
+const IDENT_RE=/^[A-Za-z_][A-Za-z0-9_]*$/;
+const EPS=1e-9;
+const $=s=>document.querySelector(s);
+let state={settings:{...DEFAULT_SETTINGS},variables:[],layers:[]};
+let lastIssues=[];
+
+/* ---------- helpers ---------- */
+const isInt=s=>/^\s*\d+\s*$/.test(String(s??''));
+const clone=o=>JSON.parse(JSON.stringify(o));
+function fmt(x){if(!isFinite(x))return '';const r=Math.round(x*1e9)/1e9;return String(r)}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),2500)}
+function download(name,text,mime){
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:mime||'text/plain'}));
+ a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
+}
+function normLayer(r){const o={};FIELDS.forEach(f=>o[f]=r&&r[f]!=null?String(r[f]):'');o.type=r&&r.type==='via'?'via':'layer';return o}
+function normVar(v){return {name:String(v?.name??''),value:String(v?.value??'')}}
+function persist(){try{localStorage.setItem(LS_KEY,JSON.stringify(state))}catch(e){}}
+
+/* ---------- safe expression evaluation (preview only; HFSS evaluates the real expressions) ---------- */
+const UNIT_M={fm:1e-15,pm:1e-12,nm:1e-9,um:1e-6,mm:1e-3,cm:1e-2,dm:1e-1,meter:1,km:1e3,uin:2.54e-8,mil:2.54e-5,in:0.0254,ft:0.3048};
+const FUNCS={abs:[1,Math.abs],sqrt:[1,Math.sqrt],sin:[1,Math.sin],cos:[1,Math.cos],tan:[1,Math.tan],exp:[1,Math.exp],ln:[1,Math.log],min:[2,Math.min],max:[2,Math.max]};
+const CONSTS={pi:Math.PI};
+const RESERVED=new Set([...Object.keys(FUNCS),...Object.keys(CONSTS),...Object.keys(UNIT_M)]);
+const NUM_RE=/^\s*[-+]?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?\s*$/;
+const VAR_NAME_RE=/^\$?[A-Za-z_][A-Za-z0-9_]*$/;
+const isZeroNum=s=>NUM_RE.test(String(s??''))&&Number(s)===0;
+function parseExpr(src,resolve){
+ const s=String(src),toks=[],re=/\s*(?:((?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?)([A-Za-z]+)?|(\$?[A-Za-z_]\w*)|(\*\*|[-+*\/^(),]))/y;
+ const tu=UNIT_M[state.settings.units]||1e-6;
+ while(re.lastIndex<s.length){
+  if(!s.slice(re.lastIndex).trim())break;
+  const at=re.lastIndex,m=re.exec(s);
+  if(!m)throw new Error(`unexpected "${s.slice(at).trim()[0]}"`);
+  if(m[1]!=null){
+   let v=parseFloat(m[1]),bare=true;
+   if(m[2]){const u=UNIT_M[m[2].toLowerCase()];if(u==null)throw new Error(`unknown unit "${m[2]}"`);v=v*u/tu;bare=false}
+   toks.push({t:'num',v,bare});
+  }else if(m[3]!=null)toks.push({t:'id',v:m[3]});
+  else toks.push({t:'op',v:m[4]});
+ }
+ if(!toks.length)throw new Error('empty expression');
+ let p=0,bareMix=false;const ids=new Set(),unknown=new Set();
+ const isOp=o=>toks[p]&&toks[p].t==='op'&&toks[p].v===o;
+ const close=()=>{if(!isOp(')'))throw new Error('missing ")"');p++};
+ function expr(){let a=term();while(isOp('+')||isOp('-')){const o=toks[p++].v,b=term();if(a.bare!==b.bare)bareMix=true;a={v:o==='+'?a.v+b.v:a.v-b.v,bare:a.bare&&b.bare}}return a}
+ function term(){let a=unary();while(isOp('*')||isOp('/')){const o=toks[p++].v,b=unary();a={v:o==='*'?a.v*b.v:a.v/b.v,bare:a.bare&&b.bare}}return a}
+ function unary(){if(isOp('-')){p++;const a=unary();return {v:-a.v,bare:a.bare}}if(isOp('+')){p++;return unary()}return power()}
+ function power(){const a=primary();if(isOp('^')||isOp('**')){p++;const b=unary();return {v:Math.pow(a.v,b.v),bare:a.bare&&b.bare}}return a}
+ function primary(){
+  const t=toks[p++];if(!t)throw new Error('unexpected end of expression');
+  if(t.t==='num')return {v:t.v,bare:t.bare};
+  if(t.t==='id'){
+   if(isOp('(')){
+    const f=FUNCS[t.v.toLowerCase()];if(!f)throw new Error(`unknown function "${t.v}"`);
+    p++;const args=[expr()];while(isOp(',')){p++;args.push(expr())}close();
+    if(args.length!==f[0])throw new Error(`${t.v}() takes ${f[0]} argument(s)`);
+    return {v:f[1](...args.map(a=>a.v)),bare:false};
+   }
+   const c=CONSTS[t.v.toLowerCase()];if(c!=null)return {v:c,bare:true};
+   ids.add(t.v);const v=resolve(t.v);
+   if(v===undefined){unknown.add(t.v);return {v:NaN,bare:false}}
+   return {v,bare:false};
+  }
+  if(t.v==='('){const a=expr();close();return a}
+  throw new Error(`unexpected "${t.v}"`);
+ }
+ const r=expr();if(p<toks.length)throw new Error(`unexpected "${toks[p].v}"`);
+ return {v:r.v,ids:[...ids],unknown:[...unknown],bareMix};
+}
+/* Variable name of a layer field: NAME_lowerElevation / NAME_thickness (null if the name is not a valid identifier) */
+function layerVar(r,f){const n=r.name.trim();return IDENT_RE.test(n)?n+(f==='thickness'?'_thickness':'_lowerElevation'):null}
+let evCache=null;
+/* Definitions for the preview: helper variables first (like in the script), then the per-layer variables */
+function resetEval(){
+ evCache={defs:new Map(),vars:new Map(),visiting:new Set(),helper:new Set()};
+ state.variables.forEach(v=>{const n=v.name.trim();if(n&&!evCache.defs.has(n)){evCache.defs.set(n,v.value);evCache.helper.add(n)}});
+ state.layers.forEach(r=>['thickness','z_bottom'].forEach(f=>{
+  const n=layerVar(r,f);if(!n||evCache.defs.has(n))return;
+  if(f==='thickness'&&isZeroNum(r.thickness))return;   // zero thickness: no variable in the script either
+  evCache.defs.set(n,r[f]);
+ }));
+}
+function varInfo(n){
+ const C=evCache;if(C.vars.has(n))return C.vars.get(n);
+ if(!C.defs.has(n))return undefined;
+ if(C.visiting.has(n))return {v:NaN,err:'circular reference',unknown:[]};
+ C.visiting.add(n);let r;try{r=evalStr(C.defs.get(n))}finally{C.visiting.delete(n)}
+ C.vars.set(n,r);return r;
+}
+/* -> {v:number|NaN, expr:bool, empty?, err?, ids:[], unknown:[] (incl. indirect), bareMix?} */
+function evalStr(s){
+ if(!evCache)resetEval();
+ s=String(s??'').trim();
+ if(!s)return {v:NaN,expr:false,empty:true,ids:[],unknown:[]};
+ if(NUM_RE.test(s))return {v:Number(s),expr:false,ids:[],unknown:[]};
+ let depErr=null;const deep=new Set();
+ try{
+  const r=parseExpr(s,n=>{const i=varInfo(n);if(i===undefined)return undefined;
+   if(i.err)depErr=/circular/.test(i.err)?'circular reference':`variable "${n}" is invalid`;
+   i.unknown.forEach(u=>deep.add(u));return i.v});
+  r.unknown.forEach(u=>deep.add(u));
+  return {v:depErr?NaN:r.v,expr:true,err:depErr||undefined,ids:r.ids,unknown:[...deep],bareMix:r.bareMix};
+ }catch(e){return {v:NaN,expr:true,err:e.message,ids:[],unknown:[]}}
+}
+const val=s=>evalStr(s).v;
+/* Effective geometry value of a layer field, i.e. the value its HFSS variable gets (a helper variable of the same name wins) */
+function geom(r,f){const n=layerVar(r,f);if(n){const i=varInfo(n);if(i)return i}return evalStr(r[f])}
+const gval=(r,f)=>geom(r,f).v;
+/* Expression for the top of a layer, used by "+ Add layer" and the stack button */
+function topExpr(r){
+ const n=r.name.trim();
+ if(IDENT_RE.test(n))return isZeroNum(r.thickness)?`${n}_lowerElevation`:`${n}_lowerElevation + ${n}_thickness`;
+ const z=evalStr(r.z_bottom),t=evalStr(r.thickness);
+ return !z.expr&&!t.expr&&isFinite(z.v)&&isFinite(t.v)?fmt(z.v+t.v):null;
+}
+function normSettings(s){
+ const o={...DEFAULT_SETTINGS};
+ if(s&&typeof s==='object')for(const k in DEFAULT_SETTINGS)if(s[k]!=null)o[k]=String(s[k]);   // unknown/removed keys are ignored
+ if(!(o.units in UNIT_M))o.units=DEFAULT_SETTINGS.units;
+ return o;
+}
+
+/* ---------- settings UI ---------- */
+function renderSettings(){document.querySelectorAll('[data-s]').forEach(el=>{el.value=String(state.settings[el.dataset.s])})}
+document.querySelectorAll('[data-s]').forEach(el=>{
+ el.addEventListener(el.tagName==='SELECT'?'change':'input',()=>{state.settings[el.dataset.s]=el.value;refresh(false)});
+});
+
+/* ---------- layer table ---------- */
+const tbody=$('#tbl tbody');
+function renderTable(){
+ if(!state.layers.length){tbody.innerHTML='<tr><td colspan="9" class="empty">No layers. Click "+ Add layer" or load a config.</td></tr>';return}
+ tbody.innerHTML=state.layers.map((r,i)=>`<tr data-i="${i}">
+  <td class="idx">${i+1}</td>
+  <td><input data-i="${i}" data-f="name" value="${esc(r.name)}" spellcheck="false" style="min-width:70px"></td>
+  <td><select data-i="${i}" data-f="type" title="Only used for the cross-section drawing" style="min-width:68px">${TYPES.map(t=>`<option${r.type===t?' selected':''}>${t}</option>`).join('')}</select></td>
+  <td><input data-i="${i}" data-f="gds_layer" value="${esc(r.gds_layer)}" inputmode="numeric" style="min-width:50px"></td>
+  <td><input data-i="${i}" data-f="z_bottom" value="${esc(r.z_bottom)}" spellcheck="false" style="min-width:90px"></td>
+  <td><input data-i="${i}" data-f="thickness" value="${esc(r.thickness)}" spellcheck="false" style="min-width:72px"></td>
+  <td class="zt" data-zt="${i}"></td>
+  <td><input data-i="${i}" data-f="material" value="${esc(r.material)}" list="mats" spellcheck="false" style="min-width:90px"></td>
+  <td class="act">
+   <button class="sm" data-act="up" title="Move up" ${i===0?'disabled':''}>&uarr;</button>
+   <button class="sm" data-act="down" title="Move down" ${i===state.layers.length-1?'disabled':''}>&darr;</button>
+   <button class="sm" data-act="stack" title="Set z bottom = top of the previous row (PREV_lowerElevation + PREV_thickness)" ${i===0?'disabled':''}>&#8892;</button>
+   <button class="sm" data-act="dup" title="Duplicate row">&#10697;</button>
+   <button class="sm del" data-act="del" title="Delete row">&#10005;</button>
+  </td></tr>`).join('');
+}
+function updatePreviews(){
+ const u=state.settings.units;
+ state.layers.forEach((r,i)=>{
+  const c=tbody.querySelector(`[data-zt="${i}"]`);if(c){const z=gval(r,'z_bottom')+gval(r,'thickness');c.textContent=isFinite(z)?fmt(z):'—'}
+  ['z_bottom','thickness'].forEach(f=>{
+   const el=tbody.querySelector(`input[data-i="${i}"][data-f="${f}"]`);if(!el)return;
+   const e=evalStr(r[f]),g=geom(r,f),n=layerVar(r,f);
+   el.classList.toggle('expr',e.expr);
+   const tip=e.err?e.err:e.unknown.length?`unknown: ${e.unknown.join(', ')}`:isFinite(g.v)?`= ${fmt(g.v)} ${u} (preview)`:'';
+   el.title=(n?`Default value of ${n}`+(tip?'\n':''):'')+tip;
+  });
+ });
+ state.variables.forEach((v,i)=>{
+  const c=vbody.querySelector(`[data-pv="${i}"]`);if(!c)return;const e=evalStr(v.value);
+  c.textContent=isFinite(e.v)?`${fmt(e.v)} ${u}`:'—';
+  const el=vbody.querySelector(`input[data-v="${i}"][data-vf="value"]`);if(el)el.classList.toggle('expr',e.expr);
+ });
+}
+tbody.addEventListener('input',e=>{
+ const el=e.target;if(!el.dataset.f)return;
+ state.layers[+el.dataset.i][el.dataset.f]=el.value;refresh(false);
+});
+tbody.addEventListener('click',e=>{
+ const b=e.target.closest('button[data-act]');if(!b)return;
+ const i=+b.closest('tr').dataset.i,L=state.layers;
+ switch(b.dataset.act){
+  case 'up':if(i>0)[L[i-1],L[i]]=[L[i],L[i-1]];break;
+  case 'down':if(i<L.length-1)[L[i+1],L[i]]=[L[i],L[i+1]];break;
+  case 'dup':{const c=clone(L[i]);c.name=uniqueName((c.name||'layer')+'_copy');L.splice(i+1,0,c);break}
+  case 'del':L.splice(i,1);break;
+  case 'stack':{const z=topExpr(L[i-1]);if(z!=null)L[i].z_bottom=z;else{toast('Previous row has no valid name or z bottom/thickness');return}break}
+ }
+ refresh(true);
+});
+tbody.addEventListener('mouseover',e=>{const tr=e.target.closest('tr[data-i]');highlight(tr?+tr.dataset.i:-1)});
+tbody.addEventListener('mouseleave',()=>highlight(-1));
+function highlight(i){
+ document.querySelectorAll('#svg [data-i]').forEach(g=>g.style.opacity=(i<0||+g.dataset.i===i)?'':'0.3');
+}
+function uniqueName(base){
+ const names=new Set(state.layers.map(r=>r.name.trim()));
+ if(!names.has(base))return base;
+ const m=base.match(/^(.*?)(\d+)$/);let stem=m?m[1]:base+'_',n=m?+m[2]+1:2;
+ while(names.has(stem+n))n++;return stem+n;
+}
+$('#bAdd').onclick=()=>{
+ const L=state.layers,p=L[L.length-1];
+ let gds='1',z='0',t='1',mat='copper';
+ if(p){const zt=topExpr(p);if(zt!=null)z=zt;t=isZeroNum(p.thickness)||!p.thickness.trim()?'1':p.thickness;mat=p.material;
+  const used=L.map(r=>parseInt(r.gds_layer)).filter(isFinite);gds=String(used.length?Math.max(...used)+1:1)}
+ L.push({name:uniqueName('L'+(L.length+1)),type:'layer',gds_layer:gds,z_bottom:z,thickness:t,material:mat});
+ refresh(true);
+ const inp=tbody.querySelector(`input[data-i="${L.length-1}"][data-f="name"]`);if(inp){inp.focus();inp.select()}
+};
+$('#bSort').onclick=()=>{
+ state.layers.sort((a,b)=>{const za=gval(a,'z_bottom'),zb=gval(b,'z_bottom');
+  if(!isFinite(za))return isFinite(zb)?1:0;if(!isFinite(zb))return -1;return za-zb||(gval(a,'thickness')-gval(b,'thickness')||0)});
+ refresh(true);
+};
+
+/* ---------- helper variables table ---------- */
+const vbody=$('#vtbl tbody');
+function renderVars(){
+ if(!state.variables.length){vbody.innerHTML='<tr><td colspan="4" class="empty">No helper variables. Layer fields may also reference variables that already exist in the HFSS design.</td></tr>';return}
+ vbody.innerHTML=state.variables.map((v,i)=>`<tr data-v="${i}">
+  <td><input data-v="${i}" data-vf="name" value="${esc(v.name)}" spellcheck="false" style="min-width:90px"></td>
+  <td><input data-v="${i}" data-vf="value" value="${esc(v.value)}" spellcheck="false" style="min-width:110px"></td>
+  <td class="pv" data-pv="${i}"></td>
+  <td class="act"><button class="sm del" data-vact="del" title="Delete variable">&#10005;</button></td></tr>`).join('');
+}
+vbody.addEventListener('input',e=>{
+ const el=e.target;if(!el.dataset.vf)return;state.variables[+el.dataset.v][el.dataset.vf]=el.value;refresh(false);
+});
+vbody.addEventListener('click',e=>{
+ const b=e.target.closest('button[data-vact]');if(!b)return;
+ state.variables.splice(+b.closest('tr').dataset.v,1);refresh(true);
+});
+$('#bAddVar').onclick=()=>{
+ const names=new Set(state.variables.map(v=>v.name.trim()));let n=1;while(names.has('var'+n))n++;
+ state.variables.push({name:'var'+n,value:'1'});refresh(true);
+ const inp=vbody.querySelector(`input[data-v="${state.variables.length-1}"][data-vf="name"]`);if(inp){inp.focus();inp.select()}
+};
+
+/* ---------- validation ---------- */
+function validate(){
+ const iss=[],S=state.settings,L=state.layers;
+ const add=(level,msg,row,field)=>iss.push({level,msg,row,field});
+ if(!S.gdsFile.trim())add('error','GDS file name is empty',null,'gdsFile');
+ else if(!/\.(gds|gdsii|gds2)$/i.test(S.gdsFile.trim()))add('warning','GDS file name does not end in .gds',null,'gdsFile');
+ if(!S.scriptName.trim())add('error','Script file name is empty',null,'scriptName');
+ if(!L.length)add('error','No layers defined');
+ const names={};
+ L.forEach((r,i)=>{
+  const nm=r.name.trim(),sheet=isZeroNum(r.thickness);
+  if(!nm)add('error','Name is required',i,'name');
+  else if(!IDENT_RE.test(nm))add('error',`"${nm}": use letters, digits and _ only, not starting with a digit (the name is used for HFSS variables and groups)`,i,'name');
+  else (names[nm.toLowerCase()]=names[nm.toLowerCase()]||[]).push(i);
+  if(!r.gds_layer.trim())add('error','GDS layer is required',i,'gds_layer');
+  else if(!isInt(r.gds_layer))add('error','GDS layer must be a non-negative integer',i,'gds_layer');
+  else if(+r.gds_layer>65535)add('error','GDS layer must be ≤ 65535',i,'gds_layer');
+  for(const [f,label] of [['z_bottom','z bottom'],['thickness','Thickness']]){
+   const e=evalStr(r[f]),vn=layerVar(r,f);
+   if(e.empty){add('error',`${label} is required`,i,f);continue}
+   if(e.err){add('error',`${label}: ${e.err}`,i,f);continue}
+   if(vn&&evCache.helper.has(vn))add('warning',`${label}: helper variable ${vn} overrides this value`,i,f);
+   if(e.unknown.length){add('warning',`${label}: variable(s) ${e.unknown.join(', ')} not defined in this tool (must already exist in HFSS); layer not previewed`,i,f);continue}
+   if(e.bareMix)add('warning',`${label}: give numbers in expressions explicit units, e.g. 0.5${S.units}`,i,f);
+   if(f==='thickness'){
+    const g=geom(r,f);
+    if(isFinite(g.v)&&g.v<0)add(e.expr?'warning':'error',e.expr?'Thickness evaluates negative (layer extends downward)':'Thickness must be ≥ 0',i,f);
+    else if(sheet)add('warning','Zero thickness: imported as sheets with a Perfect E boundary (no thickness variable, material ignored)',i,f);
+   }
+  }
+  if(!sheet&&!r.material.trim())add('warning','No material: the AEDT default material is kept',i,'material');
+ });
+ for(const k in names)if(names[k].length>1)names[k].forEach(i=>add('error',`Duplicate name "${L[i].name.trim()}" (rows ${names[k].map(x=>x+1).join(', ')})`,i,'name'));
+ const vnames={};
+ state.variables.forEach((v,j)=>{
+  const nm=v.name.trim(),addV=(level,msg,field)=>iss.push({level,msg,vrow:j,field});
+  if(!nm)addV('error','Variable name is required','name');
+  else if(!VAR_NAME_RE.test(nm))addV('error',`"${nm}": letters, digits and _ only (optional $ prefix for project variables)`,'name');
+  else if(RESERVED.has(nm.toLowerCase()))addV('error',`"${nm}" is a reserved function/constant/unit name`,'name');
+  else (vnames[nm]=vnames[nm]||[]).push(j);
+  const e=evalStr(v.value);
+  if(e.empty)addV('error','Value is required','value');
+  else if(e.err)addV('error',e.err,'value');
+  else if(e.unknown.length)addV('warning',`refers to unknown variable(s) ${e.unknown.join(', ')}`,'value');
+  else if(e.bareMix)addV('warning',`give numbers in expressions explicit units, e.g. 0.5${S.units}`,'value');
+ });
+ for(const nm in vnames)if(vnames[nm].length>1)vnames[nm].forEach(j=>iss.push({level:'error',msg:`Duplicate variable "${nm}"`,vrow:j,field:'name'}));
+ const V=L.map((r,i)=>({i,g:r.gds_layer.trim(),z0:gval(r,'z_bottom'),t:gval(r,'thickness'),n:r.name.trim()||`row ${i+1}`,via:r.type==='via'}))
+  .filter(v=>isFinite(v.z0)&&isFinite(v.t)&&v.t>=0);
+ for(let a=0;a<V.length;a++)for(let b=a+1;b<V.length;b++){
+  const A=V[a],B=V[b];
+  if(A.g===B.g&&Math.abs(A.z0-B.z0)<EPS&&Math.abs(A.t-B.t)<EPS){add('error',`${A.n} and ${B.n}: same GDS layer ${A.g} at the same z (duplicate geometry)`,B.i,'gds_layer');continue}
+  if(A.via||B.via)continue;   // vias inside a dielectric are expected
+  if(A.z0<B.z0+B.t-EPS&&B.z0<A.z0+A.t-EPS)
+   add('warning',`${A.n} (row ${A.i+1}) and ${B.n} (row ${B.i+1}) overlap in z [${fmt(Math.max(A.z0,B.z0))} … ${fmt(Math.min(A.z0+A.t,B.z0+B.t))}]`,B.i,'z_bottom');
+ }
+ return iss;
+}
+function issueEl(x){
+ return x.vrow!=null?vbody.querySelector(`input[data-v="${x.vrow}"][data-vf="${x.field}"]`)
+  :x.row==null?(x.field?document.querySelector(`[data-s="${x.field}"]`):null)
+  :tbody.querySelector(`input[data-i="${x.row}"][data-f="${x.field}"]`);
+}
+function showIssues(iss){
+ document.querySelectorAll('input.bad,input.warn').forEach(el=>el.classList.remove('bad','warn'));
+ iss.forEach(x=>{
+  const el=issueEl(x);
+  if(el&&!el.classList.contains('bad'))el.classList.add(x.level==='error'?'bad':'warn');
+  if(el&&x.level==='error')el.classList.remove('warn');
+ });
+ const ne=iss.filter(x=>x.level==='error').length,nw=iss.length-ne;
+ const ul=$('#msgs');
+ if(!iss.length){ul.innerHTML='<li class="ok">✔ No problems found</li>';return}
+ const sorted=[...iss].sort((a,b)=>(a.level==='error'?0:1)-(b.level==='error'?0:1));
+ ul.innerHTML=`<li class="info">${ne} error(s), ${nw} warning(s)</li>`+sorted.map(x=>
+  `<li class="${x.level}">${x.level==='error'?'✖':'⚠'} ${x.row!=null?`<a data-k="${iss.indexOf(x)}">Row ${x.row+1}</a>: `:x.vrow!=null?`<a data-k="${iss.indexOf(x)}">Variable ${esc(state.variables[x.vrow].name.trim()||'#'+(x.vrow+1))}</a>: `:''}${esc(x.msg)}</li>`).join('');
+}
+$('#msgs').addEventListener('click',e=>{
+ const a=e.target.closest('a[data-k]');if(!a)return;const el=issueEl(lastIssues[+a.dataset.k]);if(el){el.focus();el.select()}
+});
+
+/* ---------- Python script generator (template: hfssGdsStackup_selftest_gcpw.py, verified in AEDT 2025.2 / PyAEDT 0.18) ---------- */
+const pyStr=s=>JSON.stringify(String(s));
+/* default value written to the script: plain numbers get the table units, expressions are kept as typed */
+function pyDefault(s){s=String(s).trim();return NUM_RE.test(s)?fmt(Number(s))+state.settings.units:s}
+function genScript(){
+ const S=state.settings,now=new Date().toISOString().replace('T',' ').slice(0,19);
+ const rows=[],skipped=[];
+ state.layers.forEach((r,i)=>{
+  const nm=r.name.trim(),z=evalStr(r.z_bottom),t=evalStr(r.thickness);
+  if(!IDENT_RE.test(nm)||!isInt(r.gds_layer)||z.empty||t.empty||z.err||t.err||(!t.expr&&t.v<0)){skipped.push(`#   row ${i+1} (${nm||'unnamed'}): incomplete or invalid, not exported`);return}
+  rows.push(`    (${pyStr(nm)}, ${parseInt(r.gds_layer,10)}, ${pyStr(pyDefault(r.z_bottom))}, ${pyStr(isZeroNum(r.thickness)?'0':pyDefault(r.thickness))}, ${pyStr(r.material.trim())}),`);
+ });
+ const vars=state.variables.filter(v=>VAR_NAME_RE.test(v.name.trim())&&v.value.trim())
+  .map(v=>`    (${pyStr(v.name.trim())}, ${pyStr(pyDefault(v.value))}),`);
+ const skippedTxt=skipped.length?'# Rows left out because of errors in the tool:\n'+skipped.join('\n')+'\n':'';
+ return String.raw`# -*- coding: utf-8 -*-
+"""Import a GDSII layout into the active HFSS design as a parametric layer stackup.
+
+Generated by HFSS GDS Stackup Generator v${TOOL_VERSION} on ${now}.
+
+HOW TO RUN
+  Open the AEDT project and the HFSS design to import into, then use
+  Automation > Run PyAEDT Script and select this file (CPython, PyAEDT >= 0.18).
+  Tested with AEDT 2025.2 and PyAEDT 0.18.
+
+WHAT IT DOES (in the active design only)
+  1. Checks that the GDS file and all materials exist (no materials are created).
+  2. Every layer NAME is driven by the design variables NAME_lowerElevation and
+     NAME_thickness (no thickness variable for zero-thickness layers). A variable
+     that already exists (design or project) is reused unchanged; a missing one
+     is created with the default value from the tables below.
+  3. Imports each GDS layer as flat sheets, sweeps them up by NAME_thickness and
+     moves them by NAME_lowerElevation, so the geometry follows the variables.
+  4. Puts each layer's objects in one group: NAME, or NAME_2, NAME_3, ... if the
+     name is already used. Objects are named GROUP_obj1, GROUP_obj2, ... and get
+     the layer material. Zero-thickness layers stay sheets with a Perfect E boundary.
+
+It does NOT change the solution type, model units, setups, existing objects,
+boundaries or variables, and it does NOT save the project.
+"""
+from __future__ import print_function
+
+import os
+import re
+import sys
+
+# ---------------------------------------------------------------- settings
+GDS_FILE = ${pyStr(S.gdsFile.trim())}   # absolute, or relative to this script's folder
+PROJECT = None   # None = active project
+DESIGN = None    # None = active design
+
+# Helper variables (name, default value): created only if they do not exist yet.
+VARIABLES = [
+${vars.join('\n')}
+]
+
+# Stackup (name, GDS layer, default lowerElevation, default thickness, material).
+# The defaults are used only when NAME_lowerElevation / NAME_thickness do not exist.
+# Thickness "0" = sheet with a Perfect E boundary (the material is ignored).
+STACKUP = [
+${rows.join('\n')}
+]
+${skippedTxt}
+try:
+    HERE = os.path.dirname(os.path.abspath(__file__))
+except NameError:
+    HERE = os.getcwd()
+
+NUMBER = re.compile(r"(?<![\w$])(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?[A-Za-z]*")
+NAME = re.compile(r"(\$?[A-Za-z_]\w*)\s*(\()?")
+
+
+# ----------------------------------------------------------------- helpers
+def is_zero(value):
+    """True if value is a plain number equal to 0, with or without units ("0", "0um")."""
+    m = re.match(r"^\s*([-+]?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?)\s*[A-Za-z]*\s*$", str(value))
+    return bool(m) and float(m.group(1)) == 0.0
+
+
+def referenced_variables(expression):
+    """Variable names used in an expression (numbers with units and function names removed)."""
+    text = NUMBER.sub(" ", str(expression))
+    return set(m.group(1) for m in NAME.finditer(text)
+               if not m.group(2) and m.group(1).lower() != "pi")
+
+
+def unique(name, taken):
+    """name, or name_2, name_3 ... so nothing existing in the design is reused.
+
+    AEDT objects, groups and boundaries share one namespace, so 'taken' holds all of them.
+    """
+    candidate, i = name, 1
+    while candidate in taken:
+        i += 1
+        candidate = "%s_%d" % (name, i)
+    taken.add(candidate)
+    return candidate
+
+
+def existing_variables(hfss):
+    vm = hfss.variable_manager
+    return set(vm.design_variable_names) | set(vm.project_variable_names)
+
+
+def setup_variables(hfss):
+    """Reuse existing variables; create the missing ones, dependencies first."""
+    entries = list(VARIABLES)
+    for name, gds, elevation, thickness, material in STACKUP:
+        if not is_zero(thickness):
+            entries.append((name + "_thickness", thickness))
+        entries.append((name + "_lowerElevation", elevation))
+    wanted, seen = [], set()
+    for name, value in entries:   # first definition wins (helper variables come first)
+        if name not in seen:
+            seen.add(name)
+            wanted.append((name, value))
+
+    existing = existing_variables(hfss)
+    for name, value in wanted:
+        if name in existing:
+            print("  reused   %-22s = %s" % (name, hfss[name]))
+    missing = [(n, v) for n, v in wanted if n not in existing]
+    known = existing | set(n for n, v in missing)
+    for name, value in missing:
+        undefined = referenced_variables(value) - known
+        if undefined:
+            raise SystemExit("Variable %s = %s uses undefined variable(s): %s"
+                             % (name, value, ", ".join(sorted(undefined))))
+    while missing:
+        waiting = set(n for n, v in missing)
+        ready = [(n, v) for n, v in missing if not (referenced_variables(v) & waiting)]
+        if not ready:
+            raise SystemExit("Circular variable definitions: %s" % ", ".join(sorted(waiting)))
+        for name, value in ready:
+            hfss[name] = value
+            print("  created  %-22s = %s" % (name, value))
+            missing.remove((name, value))
+    absent = set(n for n, v in wanted) - existing_variables(hfss)
+    if absent:
+        raise SystemExit("Could not create variable(s): %s" % ", ".join(sorted(absent)))
+
+
+def existing_groups(hfss, object_names):
+    """Names of all groups already in the design.
+
+    Uses the AEDT group list (oEditor.GetChildNames("Groups")) and also the group
+    of every existing object, so nested groups are found too.
+    """
+    groups = set()
+    try:
+        groups.update(str(g) for g in hfss.modeler.oeditor.GetChildNames("Groups"))
+    except Exception:
+        pass
+    groups.update(str(hfss.modeler[o].group_name) for o in object_names)
+    return groups
+
+
+def import_layer(hfss, gds_path, gds, elevation, thickness):
+    """Import one GDS layer as flat sheets, then sweep by 'thickness' (None = keep
+    sheets) and move by 'elevation'. Both are variable names, so the geometry stays
+    parametric. Returns the names of the new objects."""
+    before = set(hfss.modeler.object_names)
+    hfss.import_gds_3d(gds_path, {gds: (0.0, 0.0)}, import_method=1)
+    hfss.modeler.refresh_all_ids()
+    new = [n for n in hfss.modeler.object_names if n not in before]
+    if new and thickness:
+        hfss.modeler.sweep_along_vector(new, [0, 0, thickness])
+    if new:
+        hfss.modeler.move(new, [0, 0, elevation])
+    return new
+
+
+# -------------------------------------------------------------------- main
+def main():
+    from ansys.aedt.core import Hfss
+
+    gds_path = GDS_FILE if os.path.isabs(GDS_FILE) else os.path.join(HERE, GDS_FILE)
+    if not os.path.isfile(gds_path):
+        raise SystemExit("GDS file not found: %s" % gds_path)
+
+    hfss = Hfss(project=PROJECT, design=DESIGN, new_desktop=False)
+    try:
+        print("Project %s, design %s, model units %s"
+              % (hfss.project_name, hfss.design_name, hfss.modeler.model_units))
+        print("GDS file: %s" % gds_path)
+
+        # 1. Materials must already exist (none are created). Sheets need none.
+        for name, gds, elevation, thickness, material in STACKUP:
+            if material and not is_zero(thickness) and not hfss.materials.exists_material(material):
+                raise SystemExit("Material '%s' (layer %s) is not in the AEDT library. "
+                                 "Add it to the project or change the stackup." % (material, name))
+
+        # 2. Variables: reuse existing ones, create the missing ones.
+        print("Variables:")
+        setup_variables(hfss)
+
+        # 3. All names already in use (objects, groups, boundaries share one namespace).
+        taken = set(hfss.modeler.object_names)
+        taken |= existing_groups(hfss, list(taken))
+        taken |= set(b.name for b in hfss.boundaries)
+
+        # 4. Import one layer at a time, then name, group and assign material / Perfect E.
+        print("Layers:")
+        results = []
+        for name, gds, elevation, thickness, material in STACKUP:
+            sheet = is_zero(thickness)
+            new = import_layer(hfss, gds_path, gds, name + "_lowerElevation",
+                               None if sheet else name + "_thickness")
+            if not new:
+                print("  Layer %-12s GDS %d: no objects imported  <-- CHECK" % (name, gds))
+                continue
+            group = unique(name, taken)   # reserved before any object is renamed
+            names = []
+            for i, old in enumerate(new):
+                obj = hfss.modeler[old]
+                # Objects are called <group>_obj<N>, never <base>_<N>, so they cannot
+                # take the name that a later run would want for its group (NAME_2, ...).
+                obj.name = unique("%s_obj%d" % (group, i + 1), taken)
+                if material and not sheet:
+                    obj.material_name = material
+                obj.group_name = group
+                names.append(obj.name)
+            members = list(hfss.modeler.oeditor.GetObjectsInGroup(group) or [])
+            ok = sorted(members) == sorted(names)
+            print("  Layer %-12s -> group %-14s with %d of %d objects%s"
+                  % (name, group, len(members), len(names), "" if ok else "  <-- CHECK"))
+            if sheet:
+                boundary = unique("PerfE_" + group, taken)
+                hfss.assign_perfecte_to_sheets(names, name=boundary)
+                print("  Layer %-12s -> Perfect E boundary %s" % (name, boundary))
+            results.append((sheet, names))
+
+        # 5. Summary.
+        hfss.modeler.fit_all()
+        units = hfss.modeler.model_units
+        print("")
+        print("%-24s %-22s %12s %12s" % ("Object", "Material", "z min [%s]" % units, "z max [%s]" % units))
+        for sheet, names in results:
+            for n in names:
+                obj = hfss.modeler[n]
+                box = obj.bounding_box
+                print("%-24s %-22s %12.6g %12.6g"
+                      % (n, "PerfE sheet" if sheet else obj.material_name, box[2], box[5]))
+        print("")
+        print("Done. Nothing was saved: check the model, then save the project yourself.")
+    finally:
+        hfss.release_desktop(close_projects=False, close_desktop=False)
+
+
+if sys.version_info[0] >= 3:
+    main()
+else:
+    print("This script needs CPython 3 with PyAEDT: use Automation > Run PyAEDT Script in AEDT.")
+`;
+}
+
+/* ---------- cross-section ---------- */
+const PRESET_COL={copper:'#d9822b',aluminum:'#9fb0c4',aluminium:'#9fb0c4',gold:'#e0b400',silver:'#c9d1d9',tungsten:'#6f7f8f',
+ nickel:'#8a9a7b',titanium:'#8c8fb0',pec:'#b0b0b0',silicon:'#5b6fa8',silicon_dioxide:'#7cc8ec',sio2:'#7cc8ec',fr4_epoxy:'#7fae5a',
+ 'rogers ro4003c (tm)':'#c9b98a',al2_o3_ceramic:'#e6dcc8',glass:'#a8dadc',air:'#dfe7ee',vacuum:'#dfe7ee'};
+function matColor(m){
+ m=(m||'').trim().toLowerCase();if(PRESET_COL[m])return PRESET_COL[m];if(!m)return '#888';
+ let h=0;for(const c of m)h=(h*31+c.charCodeAt(0))>>>0;return `hsl(${h%360},55%,55%)`;
+}
+function drawSection(){
+ const svg=$('#svg'),W=Math.max(360,Math.round($('#svgwrap').clientWidth||460)),H=380,u=state.settings.units;
+ const L=state.layers.map((r,i)=>{const z=geom(r,'z_bottom'),t=geom(r,'thickness');
+   return {i,via:r.type==='via',name:r.name.trim()||`row ${i+1}`,g:r.gds_layer.trim(),z0:z.v,t:t.v,mat:r.material.trim(),
+    ze:evalStr(r.z_bottom).expr?r.z_bottom.trim():'',te:evalStr(r.thickness).expr?r.thickness.trim():''}})
+  .filter(l=>isFinite(l.z0)&&isFinite(l.t)&&l.t>=0);
+ svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+ if(!L.length){svg.innerHTML=`<text x="${W/2}" y="${H/2}" text-anchor="middle" fill="currentColor" opacity=".6">No valid layers to draw</text>`;return}
+ L.forEach(l=>l.z1=l.z0+l.t);
+ // lanes: overlapping (non-via) layers side by side; vias are drawn as posts across the full width
+ const lanes=[];
+ L.filter(l=>!l.via).sort((a,b)=>a.z0-b.z0||b.t-a.t).forEach(l=>{let k=lanes.findIndex(e=>e<=l.z0+EPS);if(k<0){k=lanes.length;lanes.push(0)}lanes[k]=Math.max(l.z1,l.z0+EPS*2);l.lane=k});
+ const nL=Math.max(1,lanes.length);
+ const zs=[...new Set(L.flatMap(l=>[l.z0,l.z1]).map(z=>Math.round(z*1e9)/1e9))].sort((a,b)=>a-b);
+ const zmin=zs[0],zmax=zs[zs.length-1],span=(zmax-zmin)||1,eq=$('#cEq').checked;
+ const padT=22,padB=14,axisW=62,labelW=Math.min(190,Math.round(W*0.34)),pX=axisW,pW=W-axisW-labelW-10;
+ const frac=z=>{
+  if(!eq)return zs.length<2?0.5:(z-zmin)/span;
+  if(zs.length<2)return 0.5;
+  for(let k=0;k<zs.length-1;k++)if(z<=zs[k+1]+EPS){const a=zs[k],b=zs[k+1];return (k+(b>a?(z-a)/(b-a):0))/(zs.length-1)}
+  return 1;
+ };
+ const y=z=>padT+(1-frac(z))*(H-padT-padB);
+ let s=`<rect x="${pX}" y="${padT}" width="${pW}" height="${H-padT-padB}" fill="none" stroke="var(--line)"/>`;
+ s+=`<text x="${axisW-8}" y="13" text-anchor="end" font-size="11" fill="var(--dim)">z [${esc(u)}]</text>`;
+ let lastY=1e9;
+ zs.forEach(z=>{const yy=y(z);if(Math.abs(lastY-yy)<11&&z!==zmax)return;lastY=yy;
+  s+=`<line x1="${axisW-4}" x2="${pX+pW}" y1="${yy}" y2="${yy}" stroke="var(--line)" stroke-dasharray="2 3"/>`+
+  `<text x="${axisW-7}" y="${yy+4}" text-anchor="end" font-size="11" fill="var(--dim)">${esc(fmt(z))}</text>`});
+ const lw=pW/nL,labels=[];
+ const tip=l=>`<title>${esc(`${l.name}  (${l.via?'via, ':''}GDS ${l.g})\nz: ${fmt(l.z0)} … ${fmt(l.z1)} ${u}  (t = ${fmt(l.t)})${l.ze?`\nz bottom = ${l.ze}`:''}${l.te?`\nthickness = ${l.te}`:''}\nmaterial: ${l.t===0?'— (Perfect E sheet)':l.mat||'—'}`)}</title>`;
+ const yr=l=>{let y1=y(l.z1),h=y(l.z0)-y1;if(h<2){y1-=(2-h)/2;h=2}return [y1,h]};
+ L.filter(l=>!l.via).forEach(l=>{
+  const [y1,h]=yr(l),x=pX+l.lane*lw+3,w=Math.max(4,lw-6),c=matColor(l.mat);
+  s+=`<g data-i="${l.i}" style="cursor:pointer">${tip(l)}<rect x="${x}" y="${y1}" width="${w}" height="${h}" fill="${c}" fill-opacity=".85" stroke="${c}" stroke-width="1.2" rx="2"/></g>`;
+  labels.push({i:l.i,ty:y1+h/2,ax:x+w,ay:y1+h/2,txt:`${l.name} (${l.g})`,c});
+ });
+ const vias=L.filter(l=>l.via),nP=Math.max(2,Math.min(8,Math.round(pW/70))),pw=Math.max(4,Math.min(12,pW/nP/5));
+ vias.forEach((l,k)=>{
+  const [y1,h]=yr(l),c=matColor(l.mat),off=(k-(vias.length-1)/2)*pw*1.8;
+  let g=`<g data-i="${l.i}" style="cursor:pointer">${tip(l)}`,ax=0;
+  for(let j=0;j<nP;j++){const x=pX+(j+0.5)*pW/nP+off-pw/2;ax=x+pw;
+   g+=`<rect x="${x}" y="${y1}" width="${pw}" height="${h}" fill="${c}" stroke="var(--text)" stroke-opacity=".55" stroke-width=".8"/>`}
+  s+=g+'</g>';
+  labels.push({i:l.i,ty:y1+h/2,ax,ay:y1+h/2,txt:`${l.name} (${l.g}) via`,c});
+ });
+ labels.sort((a,b)=>a.ty-b.ty);
+ for(let k=1;k<labels.length;k++)if(labels[k].ty-labels[k-1].ty<13)labels[k].ty=labels[k-1].ty+13;
+ const over=labels.length?labels[labels.length-1].ty-(H-6):0;
+ if(over>0)labels.forEach(l=>l.ty-=over);
+ for(let k=0;k<labels.length;k++)if(k&&labels[k].ty-labels[k-1].ty<13)labels[k].ty=labels[k-1].ty+13;
+ const lx=pX+pW+12;
+ labels.forEach(l=>{s+=`<g data-i="${l.i}" style="cursor:pointer"><path d="M${l.ax} ${l.ay} L${lx-4} ${l.ty}" stroke="${l.c}" fill="none" opacity=".7"/>`+
+  `<text x="${lx}" y="${l.ty+4}" font-size="11.5" fill="var(--text)">${esc(l.txt)}</text></g>`});
+ svg.innerHTML=s;
+}
+$('#svg').addEventListener('click',e=>{const g=e.target.closest('[data-i]');if(!g)return;
+ const el=tbody.querySelector(`input[data-i="${g.dataset.i}"][data-f="name"]`);if(el){el.scrollIntoView({block:'center'});el.focus();el.select()}});
+$('#svg').addEventListener('mouseover',e=>{const g=e.target.closest('[data-i]');
+ tbody.querySelectorAll('tr.hl').forEach(t=>t.classList.remove('hl'));
+ if(g){const tr=tbody.querySelector(`tr[data-i="${g.dataset.i}"]`);if(tr)tr.classList.add('hl')}});
+$('#svg').addEventListener('mouseleave',()=>tbody.querySelectorAll('tr.hl').forEach(t=>t.classList.remove('hl')));
+$('#cEq').onchange=drawSection;
+window.addEventListener('resize',()=>{clearTimeout(drawSection.h);drawSection.h=setTimeout(drawSection,100)});
+
+/* ---------- refresh ---------- */
+function refresh(full){
+ resetEval();
+ if(full){renderVars();renderTable()}
+ updatePreviews();
+ lastIssues=validate();showIssues(lastIssues);
+ drawSection();
+ $('#code').textContent=genScript();
+ persist();
+ if(full)commit();
+}
+
+/* ---------- undo / redo (in-memory snapshots of the whole state) ----------
+   A snapshot is pushed per committed change: structural edits (via refresh(true)) and
+   field edits when they are committed ('change' = blur/Enter/select), not per keystroke. */
+const HIST_MAX=100;let undoStack=[],redoStack=[],committed=null;
+function commit(){
+ const s=JSON.stringify(state);
+ if(committed!==null&&s!==committed){undoStack.push(committed);if(undoStack.length>HIST_MAX)undoStack.shift();redoStack=[]}
+ committed=s;updateUndoButtons();
+}
+function updateUndoButtons(){$('#bUndo').disabled=!undoStack.length;$('#bRedo').disabled=!redoStack.length}
+function restore(from,to){
+ commit();   // keep a pending (typed but not yet committed) edit
+ if(!from.length)return;
+ to.push(committed);committed=from.pop();
+ state=JSON.parse(committed);renderSettings();refresh(true);
+}
+const undo=()=>restore(undoStack,redoStack),redo=()=>restore(redoStack,undoStack);
+document.addEventListener('change',e=>{if(e.target.closest('[data-s],#tbl,#vtbl'))commit()});
+$('#bUndo').onclick=undo;$('#bRedo').onclick=redo;
+document.addEventListener('keydown',e=>{
+ if(!(e.ctrlKey||e.metaKey)||e.altKey)return;
+ const k=e.key.toLowerCase();if(k!=='z'&&k!=='y')return;
+ const t=e.target;if(t&&(t.isContentEditable||t.tagName==='TEXTAREA'||(t.tagName==='INPUT'&&!/^(checkbox|radio|button|file)$/i.test(t.type))))return;   // native undo while typing
+ if(document.querySelector('.modal.on'))return;
+ e.preventDefault();(k==='y'||e.shiftKey)?redo():undo();
+});
+function confirmErrors(){
+ const ne=lastIssues.filter(x=>x.level==='error').length;
+ return !ne||confirm(`There are ${ne} validation error(s). Export anyway?`);
+}
+
+/* ---------- config / file IO ---------- */
+function configObject(){return {tool:TOOL_ID,version:CFG_VERSION,saved:new Date().toISOString(),settings:clone(state.settings),variables:clone(state.variables),layers:clone(state.layers)}}
+function stateFrom(obj){   // accepts v1.0/v1.1/v1.2 configs; removed settings and the old "create" flag are ignored
+ return {settings:normSettings(obj.settings),variables:Array.isArray(obj.variables)?obj.variables.map(normVar):[],layers:obj.layers.map(normLayer)};
+}
+function applyConfig(obj){
+ if(Array.isArray(obj))obj={layers:obj};
+ if(!obj||typeof obj!=='object'||!Array.isArray(obj.layers))throw new Error('Not a stackup configuration file (missing "layers")');
+ if(obj.tool&&obj.tool!==TOOL_ID)throw new Error(`Config was written by "${obj.tool}", not this tool`);
+ state=stateFrom(obj);renderSettings();refresh(true);
+}
+function loadFile(file){
+ const r=new FileReader();
+ r.onload=()=>{
+  try{
+   const txt=String(r.result);
+   if(!/\.json$/i.test(file.name)&&!/^\s*[\[{]/.test(txt))throw new Error('Not a .json configuration file');
+   applyConfig(JSON.parse(txt));toast(`Loaded config ${file.name}`);
+  }catch(e){alert('Could not load '+file.name+':\n'+e.message)}
+ };
+ r.readAsText(file);
+}
+$('#bLoadCfg').onclick=()=>$('#fCfg').click();
+$('#fCfg').onchange=e=>{const f=e.target.files[0];if(f)loadFile(f);e.target.value=''};
+$('#bSaveCfg').onclick=()=>{
+ const base=(state.settings.gdsFile.trim().split(/[\\/]/).pop().replace(/\.[^.]*$/,'')||'stackup').replace(/[^\w.-]+/g,'_');
+ download(base+'_stackup_config.json',JSON.stringify(configObject(),null,2)+'\n','application/json');toast('Configuration saved');
+};
+$('#bSavePy').onclick=()=>{if(confirmErrors())download(state.settings.scriptName.trim()||'import_gds.py',genScript(),'text/x-python')};
+$('#bCopy').onclick=async()=>{
+ try{await navigator.clipboard.writeText(genScript());toast('Script copied to clipboard')}
+ catch(e){const rg=document.createRange();rg.selectNodeContents($('#code'));const sel=getSelection();sel.removeAllRanges();sel.addRange(rg);toast('Press Ctrl+C to copy')}
+};
+const modal=(id,on)=>$(id).classList.toggle('on',on);
+$('#bHelp').onclick=()=>modal('#mHelp',true);
+$('#bHelpClose').onclick=()=>modal('#mHelp',false);
+$('#bLic').onclick=()=>modal('#mLic',true);
+$('#bLicClose').onclick=()=>modal('#mLic',false);
+['#mHelp','#mLic'].forEach(id=>$(id).onclick=e=>{if(e.target===$(id))modal(id,false)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){modal('#mHelp',false);modal('#mLic',false)}});
+$('#bTheme').onclick=()=>{document.body.classList.toggle('light');try{localStorage.setItem(LS_THEME,document.body.classList.contains('light')?'light':'dark')}catch(e){};drawSection()};
+
+let dragDepth=0;
+window.addEventListener('dragenter',e=>{if(e.dataTransfer&&[...e.dataTransfer.types].includes('Files')){dragDepth++;$('#drop').classList.add('on')}});
+window.addEventListener('dragleave',()=>{if(--dragDepth<=0){dragDepth=0;$('#drop').classList.remove('on')}});
+window.addEventListener('dragover',e=>e.preventDefault());
+window.addEventListener('drop',e=>{e.preventDefault();dragDepth=0;$('#drop').classList.remove('on');const f=e.dataTransfer.files[0];if(f)loadFile(f)});
+
+/* ---------- init ---------- */
+(function init(){
+ try{if(localStorage.getItem(LS_THEME)==='light')document.body.classList.add('light')}catch(e){}
+ let loaded=false;
+ for(const key of [LS_KEY,LS_OLD]){
+  if(loaded)break;
+  try{const s=JSON.parse(localStorage.getItem(key)||'null');if(s&&Array.isArray(s.layers)){state=stateFrom(s);loaded=true}}catch(e){}
+ }
+ if(!loaded)state={settings:{...DEFAULT_SETTINGS},variables:[],layers:SAMPLE_LAYERS.map(normLayer)};
+ renderSettings();refresh(true);
+})();
+</script>
+</body>
+</html>
